@@ -1,0 +1,43 @@
+FROM node:6
+
+# Install needed items for all other images.
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y curl git python build-essential xvfb apt-transport-https
+RUN npm install -g yarn
+RUN npm install -g pm2
+
+
+# Make directory for Learninglocker user.
+RUN mkdir -p /usr/local/learninglocker/current/
+RUN groupadd learninglocker
+RUN useradd -r -g learninglocker -d /usr/local/learninglocker/current/ learninglocker
+COPY . /usr/local/learninglocker/current/
+
+# Stuff for running learninglocker at startup and build time.
+RUN cp /usr/local/learninglocker/current/.env.example /usr/local/learninglocker/current/.env
+COPY ./docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Chown of items so they can be read by non-privileged user.
+RUN chown -R learninglocker:learninglocker /usr/local/learninglocker/current
+RUN chown -R learninglocker:learninglocker /usr/local/lib/node_modules
+
+USER learninglocker
+WORKDIR /usr/local/learninglocker/current/
+
+# Items we want in all images.
+RUN pm2 install pm2-logrotate
+RUN pm2 set pm2-logrotate:compress true
+
+# Build needed items.
+RUN yarn install
+RUN yarn build-cli-server
+RUN yarn build-worker-server
+RUN yarn build-ui-client
+RUN yarn build-ui-server
+
+
+EXPOSE 3000
+VOLUME /tmp/
+ENTRYPOINT [ "/entrypoint.sh", "--service_type", "ui" ]
+CMD [ "pm2 monit" ]

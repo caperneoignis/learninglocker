@@ -1,0 +1,77 @@
+
+version: "3"
+services:
+
+  redis:
+    image: redis:alpine
+    ports:
+    - "6379"
+    networks:
+    - frontend
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  db:
+    image: mongo:3.4-jessie
+    volumes:
+    - db-data:/data/db
+    networks:
+    - backend
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/api
+    ports:
+    - "8080"
+    networks:
+    - frontend
+    - backend
+    depends_on:
+    - redis
+    - db
+    volumes:
+    - ./docker/.env:/tmp/
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+      restart_policy:
+        condition: on-failure
+
+  ui:
+    build:
+      context: .
+      dockerfile: ./docker/ui
+    ports:
+    - "3000"
+    networks:
+    - backend
+    - frontend
+    depends_on:
+    - db
+    - redis
+    volumes:
+    - ./docker/.env:/tmp/
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  db-data:
