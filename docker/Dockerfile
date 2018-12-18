@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:8
 
 # Install needed items for all other images.
 RUN apt-get update && apt-get upgrade -y
@@ -14,7 +14,7 @@ RUN useradd -r -g learninglocker -d /usr/local/learninglocker/current/ learningl
 COPY . /usr/local/learninglocker/current/
 
 # Stuff for running learninglocker at startup and build time.
-RUN cp /usr/local/learninglocker/current/.env.example /usr/local/learninglocker/current/.env
+RUN cp /usr/local/learninglocker/current/docker/dockerfile-env /usr/local/learninglocker/current/.env
 COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
@@ -31,13 +31,10 @@ RUN pm2 set pm2-logrotate:compress true
 
 # Build needed items.
 RUN yarn install
-RUN yarn build-cli-server
-RUN yarn build-worker-server
-RUN yarn build-ui-client
-RUN yarn build-ui-server
+RUN yarn build-all
 
 
 EXPOSE 3000
 VOLUME /tmp/
-ENTRYPOINT [ "/entrypoint.sh", "--service_type", "ui" ]
-CMD [ "pm2 monit" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
+CMD [ "pm2 logs" ]

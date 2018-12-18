@@ -4,8 +4,6 @@ services:
 
   redis:
     image: redis:alpine
-    ports:
-    - "6379"
     networks:
     - frontend
     deploy:
@@ -27,19 +25,20 @@ services:
         constraints: [node.role == manager]
 
   api:
-    build:
-      context: .
-      dockerfile: ./docker/api
+    image: 127.0.0.1:5000/app
     ports:
-    - "8080"
+    - "8080:8080"
     networks:
     - frontend
     - backend
     depends_on:
     - redis
     - db
+    - ui
+    environment:
+    - SERVICE_TYPE="api"
     volumes:
-    - ./docker/.env:/tmp/
+    - ./docker/:/tmp/
     deploy:
       replicas: 2
       update_config:
@@ -50,17 +49,20 @@ services:
   ui:
     build:
       context: .
-      dockerfile: ./docker/ui
+      dockerfile: docker/dockerfile
+    image: 127.0.0.1:5000/app
     ports:
-    - "3000"
+    - "3000:3000"
     networks:
     - backend
     - frontend
+    environment:
+    - SERVICE_TYPE="ui"
     depends_on:
     - db
     - redis
     volumes:
-    - ./docker/.env:/tmp/
+    - ./docker/:/tmp/
     deploy:
       replicas: 1
       update_config:

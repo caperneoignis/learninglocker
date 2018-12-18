@@ -1,5 +1,7 @@
 # Prevent docker directory from being included in add command.
-./docker
-./.idea
-./.github
-./node_modules
+docker/**/*
+.idea/**/*
+.github/**/*
+node_modules/**/*
+./**/dist
+.env
