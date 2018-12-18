@@ -19,7 +19,7 @@ if [[ ${MIGRATION_UP} -gt 0 ]]; then yarn migrate; fi
 if [[ ${CREATE_ACCOUNT} -gt 0 ]]; then node cli/dist/server createSiteAdmin "ht2testadmin@ht2labs.com" "testOrg" "ChangeMeN0w"; fi
 
 # Special first time command that will run commands to initialize database and create account.
-if [[ ${FIRST_TIME} -gt 0 ]]; then yarn migrate && node cli/dist/server createSiteAdmin "ht2testadmin@ht2labs.com" "testOrg" "ChangeMeN0w"; fi
+if [[ ${FIRST_TIME} -gt 0 ]]; then node cli/dist/server createSiteAdmin "ht2testadmin@ht2labs.com" "testOrg" "ChangeMeN0w" && yarn migrate; fi
 
 # No defaults because this is set in entry point.
 if [[ "${SERVICE_TYPE}" == "ui" ]]; then pm2 start pm2/worker.json && pm2 start pm2/ui.json; fi
