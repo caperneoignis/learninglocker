@@ -26,4 +26,8 @@ if [[ "${SERVICE_TYPE}" == "ui" ]]; then pm2 start pm2/worker.json && pm2 start 
 if [[ "${SERVICE_TYPE}" == "api" ]]; then pm2 start pm2/worker.json && pm2 start pm2/api.json; fi
 
 # For all other commands pass through to terminal.
-exec "$@"
+if [[ $# -eq 1 && $1 == "bash" ]]; then
+	$@;
+else
+	exec "$@";
+fi

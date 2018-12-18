@@ -1,7 +1,8 @@
 # Prevent docker directory from being included in add command.
-docker/**/*
+docker/Dockerfile
 .idea/**/*
 .github/**/*
 node_modules/**/*
+# We don't want prebuilt items being included, since dockerfile will build these items. Want clean.
 ./**/dist
 .env

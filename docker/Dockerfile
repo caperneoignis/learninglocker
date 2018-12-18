@@ -14,7 +14,7 @@ RUN useradd -r -g learninglocker -d /usr/local/learninglocker/current/ learningl
 COPY . /usr/local/learninglocker/current/
 
 # Stuff for running learninglocker at startup and build time.
-RUN cp /usr/local/learninglocker/current/docker/dockerfile-env /usr/local/learninglocker/current/.env
+RUN cp /usr/local/learninglocker/current/docker/dockerfile.env /usr/local/learninglocker/current/.env
 COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
@@ -35,6 +35,7 @@ RUN yarn build-all
 
 
 EXPOSE 3000
+EXPOSE 8080
 VOLUME /tmp/
 ENTRYPOINT [ "/entrypoint.sh" ]
-CMD [ "pm2 logs" ]
+CMD [ "/bin/bash", "-c", "pm2 logs" ]

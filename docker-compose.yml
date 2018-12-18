@@ -1,7 +1,19 @@
 
 version: "3"
 services:
-
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./docker/learninglocker.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - frontend
+    depends_on:
+      - xapi
+      - api
+      - ui
+    ports:
+      - 80:80
+      - 443:443
   redis:
     image: redis:alpine
     networks:
@@ -13,7 +25,6 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-
   db:
     image: mongo:3.4-jessie
     volumes:
@@ -23,11 +34,25 @@ services:
     deploy:
       placement:
         constraints: [node.role == manager]
-
+  xapi:
+    image: learninglocker/xapi-service:latest
+    env_file:
+      - ./docker/xapi.env
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - redis
+      - db
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
   api:
-    image: 127.0.0.1:5000/app
-    ports:
-    - "8080:8080"
+    image: learninglocker
     networks:
     - frontend
     - backend
@@ -36,33 +61,31 @@ services:
     - db
     - ui
     environment:
-    - SERVICE_TYPE="api"
-    volumes:
-    - ./docker/:/tmp/
+    - SERVICE_TYPE=api
+    env_file:
+      - ./docker/dockerfile.env
     deploy:
       replicas: 2
       update_config:
         parallelism: 2
       restart_policy:
         condition: on-failure
-
   ui:
     build:
       context: .
-      dockerfile: docker/dockerfile
-    image: 127.0.0.1:5000/app
-    ports:
-    - "3000:3000"
+      dockerfile: docker/Dockerfile
+    image: learninglocker
     networks:
     - backend
     - frontend
     environment:
-    - SERVICE_TYPE="ui"
+    - SERVICE_TYPE=ui
+    - FIRST_TIME=1
     depends_on:
     - db
     - redis
-    volumes:
-    - ./docker/:/tmp/
+    env_file:
+      - ./docker/dockerfile.env
     deploy:
       replicas: 1
       update_config:
